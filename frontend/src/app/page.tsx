@@ -1,9 +1,5 @@
-import { ModeToggle } from "./HomePage";
+import { HomePage } from "./HomePage";
 
-export default function Home() {
-  return (
-    <div>
-      <ModeToggle />
-    </div>
-  );
+export default function page() {
+  return <HomePage />;
 }
