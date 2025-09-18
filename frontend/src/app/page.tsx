@@ -1,10 +1,9 @@
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import { ModeToggle } from "./HomePage";
 
 export default function Home() {
   return (
     <div>
-      <Button>Click me</Button>
+      <ModeToggle />
     </div>
   );
 }
