@@ -5,6 +5,7 @@ import "./globals.css";
 import { cookies } from "next/headers";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Providers } from "@/components/hero-providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,11 +41,13 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider defaultOpen={defaultOpen}>
-            <AppSidebar />
-            <SidebarTrigger />
-            {children}
-          </SidebarProvider>
+          <Providers>
+            <SidebarProvider defaultOpen={defaultOpen}>
+              <AppSidebar />
+              <SidebarTrigger />
+              {children}
+            </SidebarProvider>
+          </Providers>
         </ThemeProvider>
       </body>
     </html>
