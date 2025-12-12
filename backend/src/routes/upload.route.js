@@ -1,8 +1,14 @@
 import express from "express";
-import { upload } from "../controllers/upload.controller.js";
+import { upload as uploadController } from "../controllers/upload.controller.js";
+import { upload as uploadMiddleware } from "../middlewares/multer.middleware.js";
 
 const router = express.Router();
 
-router.post("/", upload);
+router.get("/", (req, res) => {
+    res.send("Upload route is working");
+});
+
+router.post("/", uploadMiddleware.array("files"), uploadController);
+
 
 export default router;
