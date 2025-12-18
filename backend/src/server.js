@@ -4,9 +4,6 @@ import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
 
-// Import Routes
-import upload from "./routes/upload.route.js";
-
 
 const app = express();
 
@@ -22,8 +19,12 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 
+// Import Routes
+import uploadRouter from "./routes/upload.route.js";
+
+
 // API Routes
-app.use("/api/upload", upload);
+app.use("/api/v1", uploadRouter);
 
 const server = app.listen(process.env.PORT || 5001, "0.0.0.0", () => {
     console.log(`Server running on PORT ${process.env.PORT}`);

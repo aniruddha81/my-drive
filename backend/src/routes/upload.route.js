@@ -1,14 +1,15 @@
 import { Router } from "express";
 import { upload as uploadController } from "../controllers/upload.controller.js";
-import { upload as uploadMiddleware } from "../middlewares/multer.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
-const router = Router();
+const uploadRouter = Router();
 
-router.get("/", (req, res) => {
-    res.send("Upload route is working");
+uploadRouter.get("/upload-files", (req, res) => {
+    return res.status(200).json(new ApiResponse(200, null, "Upload API is working"));
 });
 
-router.post("/", uploadMiddleware.array("files"), uploadController);
+uploadRouter.post("/upload-files", upload.array("files", 10), uploadController);
 
 
-export default router;
+export default uploadRouter;

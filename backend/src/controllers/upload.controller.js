@@ -1,43 +1,22 @@
 import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const upload = asyncHandler(async (req, res) => {
     const files = req.files;
 
-    if (!files || files.length === 0) {
-        return res.status(400).json({ message: "No files received" });
+    try {
+        files.forEach(async elem => {
+
+            const file = await uploadOnCloudinary(elem.path);
+            console.log("Uploaded file info:", file);
+        })
+    } catch (error) {
+        throw new ApiError(500, "Failed to upload files to cloud");
     }
 
-    console.log(`Uploading ${files.length} file(s) to Cloudinary...`);
-
-    const uploadedUrls = [];
-    let failed = 0;
-
-    // Upload files one by one so it is easy to follow
-    for (const file of files) {
-        try {
-            const result = await uploadOnCloudinary(file.path);
-            const url = result?.secure_url || result?.url;
-            if (url) {
-                uploadedUrls.push(url);
-            } else {
-                failed += 1;
-            }
-        } catch (error) {
-            console.error("File failed to upload:", error?.message || error);
-            failed += 1;
-        }
-    }
-
-    if (uploadedUrls.length === 0) {
-        throw new ApiError(500, "File upload failed");
-    }
-
-    return res.status(failed ? 207 : 200).json({
-        urls: uploadedUrls,
-        failed,
-    });
+    return res.status(200).json(new ApiResponse(200, null, "Files uploaded successfully"));
 });
 
 export { upload };
