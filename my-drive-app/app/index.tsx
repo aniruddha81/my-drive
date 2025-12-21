@@ -105,6 +105,11 @@ export default function Index() {
         alignItems: "center",
       }}
     >
+      <View className="flex items-center justify-center bg-white">
+        <Text className="text-xl font-bold text-blue-500">
+          Welcome to Nativewind!
+        </Text>
+      </View>
       <Text style={{ fontSize: 20, fontWeight: "600", marginBottom: 16 }}>
         My Drive Uploader
       </Text>
