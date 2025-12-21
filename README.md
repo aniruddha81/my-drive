@@ -64,5 +64,3 @@ bun start
 - **Web**: Next.js web application
 - **Mobile**: iOS & Android via Expo
 - **API**: RESTful backend service
-
-amnei
