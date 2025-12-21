@@ -6,6 +6,7 @@ import {
   FlatList,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -17,7 +18,7 @@ type PickedFile = {
   size?: number | null;
 };
 
-const BACKEND_BASE_URL = "http://192.168.0.104:8000";
+const BACKEND_BASE_URL = "http://localhost:8000";
 const UPLOAD_ENDPOINT = `${BACKEND_BASE_URL}/api/v1/upload-files`;
 
 export default function Index() {
@@ -75,7 +76,6 @@ export default function Index() {
 
       const res = await fetch(UPLOAD_ENDPOINT, {
         method: "POST",
-        // Let React Native set the multipart boundary automatically
         body: formData,
       });
 
@@ -86,8 +86,6 @@ export default function Index() {
 
       const json = await res.json().catch(() => null);
       setStatus(json?.message || "Upload successful");
-      // Optionally clear after success
-      // setFiles([]);
     } catch (err: any) {
       console.error("Upload error", err);
       setStatus(null);
@@ -97,97 +95,130 @@ export default function Index() {
     }
   }, [files]);
 
+  const formatFileSize = (bytes?: number | null) => {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <View className="flex items-center justify-center bg-white">
-        <Text className="text-xl font-bold text-blue-500">
-          Welcome to Nativewind!
-        </Text>
-      </View>
-      <Text style={{ fontSize: 20, fontWeight: "600", marginBottom: 16 }}>
-        My Drive Uploader
-      </Text>
-
-      <Pressable
-        onPress={pickFiles}
-        disabled={uploading}
-        style={{
-          backgroundColor: "#2563eb",
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          borderRadius: 8,
-          opacity: uploading ? 0.6 : 1,
-          marginBottom: 12,
-        }}
+    <View className="flex-1 bg-linear-to-b from-blue-50 to-white">
+      <ScrollView
+        contentContainerClassName="flex-grow justify-center items-center px-6 py-12"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={{ color: "white", fontWeight: "600" }}>
-          {uploading ? "Please wait..." : "Select Files"}
-        </Text>
-      </Pressable>
+        {/* Header Section */}
+        <View className="mb-8 items-center">
+          <View className="bg-blue-600 w-16 h-16 rounded-full items-center justify-center mb-4">
+            <Text className="text-white text-3xl font-bold">📁</Text>
+          </View>
+          <Text className="text-3xl font-bold text-gray-800 mb-2">
+            My Drive
+          </Text>
+          <Text className="text-base text-gray-500 text-center">
+            Upload and manage your files easily
+          </Text>
+        </View>
 
-      <View style={{ width: "90%", maxHeight: 200, marginBottom: 12 }}>
-        {files.length > 0 ? (
-          <FlatList
-            data={files}
-            keyExtractor={(item, idx) => `${item.uri}-${idx}`}
-            renderItem={({ item }) => (
-              <View style={{ paddingVertical: 6 }}>
-                <Text style={{ textAlign: "center" }}>{item.name}</Text>
+        {/* File Selection Card */}
+        <View className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <Text className="text-lg font-semibold text-gray-700 mb-4">
+            Select Files
+          </Text>
+
+          <Pressable
+            onPress={pickFiles}
+            disabled={uploading}
+            className={`${
+              uploading ? "bg-blue-400" : "bg-blue-600 active:bg-blue-700"
+            } px-6 py-4 rounded-xl mb-4 shadow-md`}
+          >
+            <Text className="text-white font-semibold text-center text-base">
+              {uploading ? "Please wait..." : "📎 Choose Files"}
+            </Text>
+          </Pressable>
+
+          {/* Files List */}
+          <View className="max-h-64 mb-4">
+            {files.length > 0 ? (
+              <View className="bg-gray-50 rounded-xl p-3">
+                <Text className="text-sm font-medium text-gray-600 mb-2">
+                  Selected Files ({files.length})
+                </Text>
+                <FlatList
+                  data={files}
+                  keyExtractor={(item, idx) => `${item.uri}-${idx}`}
+                  renderItem={({ item }) => (
+                    <View className="bg-white rounded-lg p-3 mb-2 border border-gray-200">
+                      <Text
+                        className="text-gray-800 font-medium text-sm mb-1"
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </Text>
+                      {item.size && (
+                        <Text className="text-gray-500 text-xs">
+                          {formatFileSize(item.size)}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                  nestedScrollEnabled
+                />
+              </View>
+            ) : (
+              <View className="bg-gray-50 rounded-xl p-8 items-center justify-center">
+                <Text className="text-4xl mb-2">📂</Text>
+                <Text className="text-gray-400 text-center text-sm">
+                  No files selected yet
+                </Text>
               </View>
             )}
-            ItemSeparatorComponent={() => (
-              <View style={{ height: 1, backgroundColor: "#e5e7eb" }} />
-            )}
-          ></FlatList>
-        ) : (
-          <Text style={{ color: "#6b7280", textAlign: "center" }}>
-            No files selected
-          </Text>
-        )}
-      </View>
-
-      <Pressable
-        onPress={uploadFiles}
-        disabled={!canUpload}
-        style={{
-          backgroundColor: canUpload ? "#16a34a" : "#9ca3af",
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          borderRadius: 8,
-          opacity: uploading ? 0.7 : 1,
-          marginBottom: 8,
-          minWidth: 140,
-          alignItems: "center",
-        }}
-      >
-        {uploading ? (
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <ActivityIndicator color="#ffffff" />
-            <Text style={{ color: "white", fontWeight: "600", marginLeft: 8 }}>
-              Uploading...
-            </Text>
           </View>
-        ) : (
-          <Text style={{ color: "white", fontWeight: "600" }}>Upload</Text>
-        )}
-      </Pressable>
 
-      {status ? (
-        <Text style={{ marginTop: 6, color: "#111827" }}>{status}</Text>
-      ) : null}
+          {/* Upload Button */}
+          <Pressable
+            onPress={uploadFiles}
+            disabled={!canUpload}
+            className={`${
+              canUpload ? "bg-green-600 active:bg-green-700" : "bg-gray-400"
+            } px-6 py-4 rounded-xl shadow-md ${uploading ? "opacity-70" : ""}`}
+          >
+            {uploading ? (
+              <View className="flex-row items-center justify-center">
+                <ActivityIndicator color="#ffffff" size="small" />
+                <Text className="text-white font-semibold ml-3 text-base">
+                  Uploading...
+                </Text>
+              </View>
+            ) : (
+              <Text className="text-white font-semibold text-center text-base">
+                ⬆️ Upload Files
+              </Text>
+            )}
+          </Pressable>
 
-      <View style={{ position: "absolute", bottom: 24 }}>
-        <Text style={{ color: "#6b7280", textAlign: "center" }}>
-          Endpoint: {UPLOAD_ENDPOINT}
-          {Platform.OS !== "web" ? "" : " (web)"}
-        </Text>
-      </View>
+          {/* Status Message */}
+          {status && (
+            <View className="mt-4 bg-green-50 border border-green-200 rounded-lg p-3">
+              <Text className="text-green-800 text-center text-sm font-medium">
+                ✓ {status}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Footer Info */}
+        <View className="items-center mt-4">
+          <Text className="text-gray-400 text-xs text-center">
+            Endpoint: {UPLOAD_ENDPOINT}
+          </Text>
+          <Text className="text-gray-400 text-xs text-center mt-1">
+            Platform: {Platform.OS}
+          </Text>
+        </View>
+      </ScrollView>
     </View>
   );
 }
