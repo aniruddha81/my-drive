@@ -2,11 +2,10 @@
   "name": "backend",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon src/server.js"
+    "dev": "bun --watch src/server.js"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "nodemon": "^3.1.11",
     "prisma": "^7.2.0"
   },
   "peerDependencies": {
