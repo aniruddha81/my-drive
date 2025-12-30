@@ -27,6 +27,4 @@ import uploadRouter from "./routes/upload.route.js";
 // API Routes
 app.use("/api/v1", uploadRouter);
 
-const server = app.listen(process.env.PORT || 5001, "0.0.0.0", () => {
-    console.log(`Server running on PORT ${process.env.PORT}`);
-});
+export default app;

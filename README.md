@@ -15,7 +15,7 @@ This monorepo contains three main components:
 
 ### Frontend
 
-- **Tech Stack**: Next.js 15, TypeScript, React
+- **Tech Stack**: Next.js 16, TypeScript, React
 - **Styling**: Tailwind CSS, shadcn/ui components
 - **Location**: `frontend/`
 - **Features**: Modern web interface for file management
@@ -57,6 +57,10 @@ bun start
 
 - Backend requires Cloudinary credentials for file storage
 - Configure environment variables in respective directories
+- Rename the `.env.sample` file to `.env` in each project directory before starting the services. Example locations:
+  - `backend/`
+  - `frontend/`
+  - `my-drive-app/`
 - Prisma schema located at `backend/prisma/schema.prisma`
 
 ## 📱 Platforms

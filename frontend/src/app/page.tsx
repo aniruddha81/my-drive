@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { headers } from "next/dist/server/request/headers";
+import axios from "axios";
 import { useState } from "react";
 
 export default function SimpleFileUpload() {
@@ -29,18 +29,14 @@ export default function SimpleFileUpload() {
       setMessage("");
 
       // Change the URL/port if your backend runs elsewhere
-      const res = await fetch(
-        "/api/v1/upload-files",
-        {
-          method: "POST",
-          body: form,
-        }
-      );
 
-      if (!res.ok) {
-        throw new Error(`Upload failed: ${res.status}`);
-      }
+      const res = await axios.post("/api/v1/upload-files", form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
+      console.log("File upload response:", res);
       setMessage("Files uploaded successfully.");
       setFiles(null);
       // Optionally clear the input element by resetting key (kept simple here)

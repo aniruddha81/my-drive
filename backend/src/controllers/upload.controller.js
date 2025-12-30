@@ -25,6 +25,10 @@ const upload = asyncHandler(async (req, res) => {
                     height: cloudinaryFile.height || null,
                 }
             })
+
+            if (!storeFileInDB) {
+                throw new ApiError(500, "Failed to store file info in database");
+            }
         })
     } catch (error) {
         throw new ApiError(500, "Failed to upload files to cloud");
