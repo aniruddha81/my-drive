@@ -1,8 +1,9 @@
-config({ path: "./.env" });
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
+
+config({ path: "./.env" });
 
 
 const app = express();

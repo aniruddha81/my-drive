@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
 import { config } from "dotenv";
+import fs from "fs";
 config({ path: "./.env" });
 
 
@@ -32,3 +32,4 @@ const uploadOnCloudinary = async (localFilePath) => {
 
 
 export { uploadOnCloudinary };
+

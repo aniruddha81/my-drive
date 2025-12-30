@@ -1,3 +1,4 @@
+import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asynchandler.js";
@@ -9,8 +10,21 @@ const upload = asyncHandler(async (req, res) => {
     try {
         files.forEach(async elem => {
 
-            const file = await uploadOnCloudinary(elem.path);
-            console.log("Uploaded file info:", file);
+            const cloudinaryFile = await uploadOnCloudinary(elem.path);
+            console.log("Uploaded file info:", cloudinaryFile);
+
+            const storeFileInDB = await prisma.file.create({
+                data: {
+                    name: cloudinaryFile.original_filename,
+                    publicId: cloudinaryFile.public_id,
+                    url: cloudinaryFile.secure_url,
+                    size: cloudinaryFile.bytes,
+                    format: cloudinaryFile.format,
+                    resourceType: cloudinaryFile.resource_type,
+                    width: cloudinaryFile.width || null,
+                    height: cloudinaryFile.height || null,
+                }
+            })
         })
     } catch (error) {
         throw new ApiError(500, "Failed to upload files to cloud");
