@@ -8,8 +8,7 @@ const upload = asyncHandler(async (req, res) => {
     const files = req.files;
 
     try {
-        files.forEach(async elem => {
-
+        const uploadPromises = files.map(async (elem) => {
             const cloudinaryFile = await uploadOnCloudinary(elem.path);
             console.log("Uploaded file info:", cloudinaryFile);
 
@@ -29,7 +28,9 @@ const upload = asyncHandler(async (req, res) => {
             if (!storeFileInDB) {
                 throw new ApiError(500, "Failed to store file info in database");
             }
-        })
+        });
+
+        await Promise.all(uploadPromises);
     } catch (error) {
         throw new ApiError(500, "Failed to upload files to cloud");
     }

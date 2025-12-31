@@ -44,14 +44,13 @@ const gracefulShutdown = async (reason = 'shutdown', exitCode = 0) => {
 // Handle synchronous exceptions as early as possible
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err)
-    // Attempt graceful shutdown, then exit
-    gracefulShutdown('uncaughtException', 1)
+    // Log the error but keep the server running
 })
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason)
-    gracefulShutdown('unhandledRejection', 1)
+    // Log the error but keep the server running
 })
 
 // Termination signals

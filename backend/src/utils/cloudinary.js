@@ -4,17 +4,27 @@ import fs from "fs";
 config({ path: "./.env" });
 
 
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+const apiKey = process.env.CLOUDINARY_API_KEY;
+const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+console.log("Cloudinary Config Check:");
+console.log("Cloud Name:", cloudName ? "Set" : "Missing");
+console.log("API Key:", apiKey ? "Set" : "Missing");
+console.log("API Secret:", apiSecret ? "Set" : "Missing");
+
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null
         const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
+            resource_type: "auto",
+            upload_preset: "random_files",
         })
         // file has been uploaded successfull
         console.log("file is uploaded on cloudinary ", response.url);
