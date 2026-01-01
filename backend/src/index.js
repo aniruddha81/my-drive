@@ -1,6 +1,7 @@
 import dotenv from 'dotenv'
 import app from './app.js'
 import { connectDB, disconnectDB } from './db/index.js'
+import { PORT } from './Constants.js'
 
 dotenv.config({ path: './.env' })
 
@@ -62,7 +63,7 @@ const start = async () => {
     try {
         await connectDB()
 
-        const port = Number(process.env.PORT) || 8000
+        const port = Number(PORT) || 8000
         const host = process.env.HOST || '0.0.0.0'
 
         server = app.listen(port, host, () => {
