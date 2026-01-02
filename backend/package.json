@@ -2,7 +2,7 @@
   "name": "backend",
   "main": "index.js",
   "scripts": {
-    "dev": "bun --watch src/index.js"
+    "dev": "nodemon src/index.js"
   },
   "devDependencies": {
     "@types/bun": "latest",
