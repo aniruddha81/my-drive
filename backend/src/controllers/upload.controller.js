@@ -1,48 +1,42 @@
-import { prisma } from "../../lib/prisma.js";
+import { prisma } from "../../lib/prisma.ts";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
-const upload = asyncHandler(async (req, res) => {
+const uploadController = asyncHandler(async (req, res) => {
     const files = req.files;
 
     if (!files || files.length === 0) {
         throw new ApiError(400, "No files provided");
     }
 
-    const uploadedFiles = [];
 
     try {
-        // Upload sequentially to avoid race conditions
-        for (const file of files) {
-            console.log("Uploading file:", file.originalname);
+        const filePaths = files.map(file => file.path);
 
-            const cloudinaryFile = await uploadOnCloudinary(file.path);
-            console.log("Uploaded file info:", cloudinaryFile);
+        const cloudinaryFiles = await Promise.all(filePaths.map(uploadOnCloudinary));
 
-            const storeFileInDB = await prisma.file.create({
-                data: {
-                    name: cloudinaryFile.original_filename,
-                    publicId: cloudinaryFile.public_id,
-                    url: cloudinaryFile.secure_url,
-                    size: cloudinaryFile.bytes,
-                    format: cloudinaryFile.format,
-                    resourceType: cloudinaryFile.resource_type,
-                    width: cloudinaryFile.width || null,
-                    height: cloudinaryFile.height || null,
-                }
-            });
+        const dbFiles = cloudinaryFiles.map(file => ({
+            name: file.original_filename,
+            publicId: file.public_id,
+            url: file.secure_url,
+            size: file.bytes,
+            format: file.format,
+            resourceType: file.resource_type,
+            width: file.width || null,
+            height: file.height || null,
+        }));
+        const storedFiles = await prisma.file.createManyAndReturn({
+            data: dbFiles,
+        });
 
-            if (!storeFileInDB) {
-                throw new ApiError(500, "Failed to store file info in database");
-            }
-
-            uploadedFiles.push(storeFileInDB);
+        if (!storedFiles || storedFiles.length === 0) {
+            throw new ApiError(500, "Failed to store file info in database");
         }
 
         return res.status(200).json(
-            new ApiResponse(200, uploadedFiles, "Files uploaded successfully")
+            new ApiResponse(200, storedFiles, "Files uploaded successfully")
         );
 
     } catch (error) {
@@ -51,4 +45,4 @@ const upload = asyncHandler(async (req, res) => {
     }
 });
 
-export { upload };
+export default uploadController;

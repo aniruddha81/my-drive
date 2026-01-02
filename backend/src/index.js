@@ -1,9 +1,7 @@
-import dotenv from 'dotenv'
+import "dotenv/config"
 import app from './app.js'
 import { connectDB, disconnectDB } from './db/index.js'
 import { PORT } from './Constants.js'
-
-dotenv.config({ path: './.env' })
 
 // Keep a reference to the server so shutdown handlers can close it.
 let server = null
