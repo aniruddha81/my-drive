@@ -14,7 +14,7 @@ type SignedItem = {
   public_id: string;
 };
 
-type SignResponse = { uploads: SignedItem[] };
+type SignResponse = { data: SignedItem[] };
 
 export default function Page() {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -36,17 +36,18 @@ export default function Page() {
 
     try {
       // 1) ask Express to sign each file (unique public_id per file)
-      const fileMeta = Array.from(files).map((f) => ({
-        filename: f.name,
-        isImage: f.type.startsWith("image/"),
-      }));
+      const fileMeta = Array.from(files).map((f) => ({ filename: f.name }));
 
-      const signRes = await axios.post<SignResponse>("api/v1/sign_upload_form", {
-        folder: "signed_upload_demo_form",
-        files: fileMeta,
-      });
+      const signRes = await axios.post<SignResponse>(
+        "api/v1/sign_upload_form",
+        {
+          folder: "signed_upload_demo_form",
+          files: fileMeta,
+        }
+      );
 
-      const uploads = signRes.data.uploads;
+      const uploads = signRes.data.data;
+      console.log("Received signed upload data:", uploads);
       if (uploads.length !== files.length) {
         throw new Error("Signature response count mismatch.");
       }
@@ -56,7 +57,6 @@ export default function Page() {
         const file = files[i];
         const signed = uploads[i];
 
-        // same as docs: /auto/upload
         const url = `https://api.cloudinary.com/v1_1/${signed.cloudname}/auto/upload`;
 
         const formData = new FormData();
@@ -67,7 +67,6 @@ export default function Page() {
         formData.append("timestamp", String(signed.timestamp));
         formData.append("signature", signed.signature);
 
-        // MUST match signed params
         formData.append("eager", signed.eager);
         formData.append("folder", signed.folder);
         formData.append("public_id", signed.public_id);
@@ -83,6 +82,7 @@ export default function Page() {
         setResults((prev) => [...prev, res.data]);
       }
     } catch (e: any) {
+      console.log("Upload error:", e);
       setError(
         axios.isAxiosError(e) ? e.response?.data?.error || e.message : String(e)
       );
@@ -156,7 +156,6 @@ export default function Page() {
             </div>
 
             {r.secure_url && r.resource_type === "image" && (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={r.secure_url}
                 alt="uploaded"

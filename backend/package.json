@@ -1,11 +1,15 @@
 {
   "name": "backend",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/multer": "^2.0.0",
     "@types/node": "^25.0.3",
     "@types/pg": "^8.16.0",
     "@types/react": "^19.2.7",
