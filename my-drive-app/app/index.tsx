@@ -1,224 +1,175 @@
-import api from "@/lib/api";
-import { Feather } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { View, Text, Pressable, Image, ScrollView } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import axios from "axios";
+import api from "@/lib/api";
 
-export default function Index() {
-  const [files, setFiles] = useState<any[]>([]);
-  const [message, setMessage] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+type SignedItem = {
+  filename: string;
+  cloudname: string;
+  apikey: string;
+  timestamp: number;
+  signature: string;
+  eager: string;
+  folder: string;
+  public_id: string;
+};
 
-  async function handleSelect() {
+type SignResponse = { data: SignedItem[] };
+
+export default function UploadScreen() {
+  const [files, setFiles] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [results, setResults] = useState<any[]>([]);
+  const [error, setError] = useState("");
+
+  const pickFiles = async () => {
+    const res = await DocumentPicker.getDocumentAsync({
+      multiple: true,
+      copyToCacheDirectory: true,
+    });
+
+    console.log("Picked files:", res);
+
+    if (!res.canceled) {
+      setFiles(res.assets);
+    }
+  };
+
+  const uploadAll = async () => {
+    if (!files.length) return;
+
+    setUploading(true);
+    setProgress(0);
+    setResults([]);
+    setError("");
+
     try {
-      setMessage("");
-      const result: any = await (DocumentPicker as any).getDocumentAsync({
-        type: "*/*",
-        multiple: true,
-        copyToCacheDirectory: true,
+      // 1) Ask backend to sign uploads
+      const fileMeta = files.map((f) => ({ filename: f.name }));
+
+      const signRes = await api.post<SignResponse>("/api/v1/sign_upload_form", {
+        folder: "signed_upload_demo_form",
+        files: fileMeta,
       });
 
-      if (!result || result.canceled) return;
+      const uploads = signRes.data.data;
 
-      const picked = (result.assets || []).filter((a: any) => a.uri && a.name);
-      setFiles((prev) => [...prev, ...picked]);
-    } catch (err: any) {
-      Alert.alert("Error", err?.message ?? "Failed to pick files.");
-    }
-  }
+      if (uploads.length !== files.length) {
+        throw new Error("Signature response count mismatch");
+      }
 
-  function handleRemove(uri: string) {
-    setFiles((prev) => prev.filter((f) => f.uri !== uri));
-  }
+      // 2) Upload each file to Cloudinary
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const signed = uploads[i];
 
-  function handleClear() {
-    setFiles([]);
-  }
+        const url = `https://api.cloudinary.com/v1_1/${signed.cloudname}/auto/upload`;
 
-  async function handleUpload() {
-    if (!files || files.length === 0) {
-      setMessage("Please choose one or more files first.");
-      return;
-    }
+        const formData = new FormData();
 
-    try {
-      setLoading(true);
-      setMessage("");
-
-      const form = new FormData();
-
-      files.forEach((f: any) => {
-        form.append("files", {
-          uri: f.uri,
-          name: f.name || "file",
-          type: f.mimeType || "application/octet-stream",
+        formData.append("file", {
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType || "application/octet-stream",
         } as any);
-      });
 
-      const res = api.post("/api/v1/upload-files", form, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+        formData.append("api_key", signed.apikey);
+        formData.append("timestamp", String(signed.timestamp));
+        formData.append("signature", signed.signature);
+        formData.append("eager", signed.eager);
+        formData.append("folder", signed.folder);
+        formData.append("public_id", signed.public_id);
 
-      res
-        .then((response) => {
-          setMessage("Files uploaded successfully.");
-          setFiles([]);
-          Alert.alert("Success", "Files uploaded successfully.");
-        })
-        .catch((error) => {
-          setMessage(`Upload failed: ${error.message}`);
-          Alert.alert("Upload Failed", error.message);
+        const res = await axios.post(url, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: (evt) => {
+            if (!evt.total) return;
+            setProgress(evt.loaded / evt.total);
+          },
         });
-    } catch (err: any) {
-      setMessage(err?.message || "Something went wrong");
+
+        setResults((prev) => [...prev, res.data]);
+      }
+    } catch (e: any) {
+      console.log("Upload error:", e);
+      setError(
+        axios.isAxiosError(e) ? e.response?.data?.error || e.message : String(e)
+      );
     } finally {
-      setLoading(false);
+      setUploading(false);
+      setProgress(0);
     }
-  }
+  };
 
   return (
-    <ScrollView className="flex-1 bg-background">
-      <View className="px-6 py-12 space-y-8">
-        {/* Header Section */}
-        <View className="border-b border-border pb-6">
-          <Text className="text-4xl font-light text-foreground tracking-tight">
-            File <Text className="font-bold text-primary">Upload</Text>
-          </Text>
-          <Text className="text-muted-foreground mt-2 text-lg">
-            Securely upload and manage your documents.
-          </Text>
-        </View>
+    <ScrollView className="flex-1 bg-white p-6">
+      <Text className="text-2xl font-semibold">
+        Signed Upload (Expo + NativeWind)
+      </Text>
 
-        {/* Main Card */}
-        <View className="bg-card rounded-3xl p-6 shadow-sm border border-border space-y-6">
-          {/* Action Buttons */}
-          <View className="flex-col gap-4">
-            <Pressable
-              onPress={handleSelect}
-              disabled={loading}
-              className={`flex-row items-center justify-center space-x-3 px-6 py-4 rounded-xl border-2 border-dashed border-primary/30 active:bg-primary/5 ${loading ? "opacity-50" : ""}`}
-            >
-              <View className="bg-primary/10 p-3 rounded-full">
-                <Feather
-                  name="plus"
-                  size={24}
-                  className="text-primary"
-                  color="#ea9e20"
-                />
-                {/* Note: In nativewind v4 we might need to pass color prop explicitly for icons if class doesn't apply immediately or stick to style prop. Using hex for gold/primary mainly for reliability in icons */}
-              </View>
-              <Text className="text-primary font-semibold text-lg">
-                Add Files
-              </Text>
-            </Pressable>
+      <View className="mt-6 space-y-3">
+        <Pressable
+          onPress={pickFiles}
+          disabled={uploading}
+          className="rounded-lg bg-gray-900 px-4 py-3"
+        >
+          <Text className="text-center text-white">Choose files</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={uploadAll}
+          disabled={uploading || !files.length}
+          className="rounded-lg bg-blue-600 px-4 py-3 disabled:opacity-50"
+        >
+          <Text className="text-center text-white">
+            {uploading ? "Uploading..." : "Upload"}
+          </Text>
+        </Pressable>
+      </View>
+
+      {uploading && (
+        <View className="mt-6">
+          <View className="flex-row justify-between">
+            <Text className="text-sm">Uploading…</Text>
+            <Text className="text-sm">{Math.round(progress * 100)}%</Text>
           </View>
-
-          {/* Selected Files List */}
-          {files.length > 0 && (
-            <View className="space-y-4">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-lg font-semibold text-foreground">
-                  Selected ({files.length})
-                </Text>
-                <Pressable onPress={handleClear}>
-                  <Text className="text-destructive font-medium">
-                    Clear All
-                  </Text>
-                </Pressable>
-              </View>
-
-              <View className="bg-background/50 rounded-xl overflow-hidden border border-border/50">
-                {files.map((f: any, idx: number) => (
-                  <View
-                    key={idx}
-                    className="flex-row items-center justify-between p-4 border-b border-border/50 last:border-0"
-                  >
-                    <View className="flex-row items-center space-x-4 flex-1">
-                      <View className="bg-muted p-2 rounded-lg">
-                        <Feather
-                          name="file-text"
-                          size={20}
-                          className="text-foreground"
-                          color="#334155"
-                        />
-                      </View>
-                      <View className="flex-1">
-                        <Text
-                          className="text-foreground font-medium"
-                          numberOfLines={1}
-                        >
-                          {f.name}
-                        </Text>
-                        <Text className="text-muted-foreground text-xs">
-                          {f.size
-                            ? (f.size / 1024).toFixed(1) + " KB"
-                            : "Unknown size"}
-                        </Text>
-                      </View>
-                    </View>
-                    <Pressable
-                      onPress={() => handleRemove(f.uri)}
-                      className="p-2"
-                    >
-                      <Feather
-                        name="x"
-                        size={18}
-                        className="text-muted-foreground"
-                        color="#94a3b8"
-                      />
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Upload Button */}
-          <Pressable
-            onPress={handleUpload}
-            disabled={!files.length || loading}
-            className={`${
-              files.length && !loading
-                ? "bg-primary shadow-lg shadow-primary/30"
-                : "bg-muted"
-            } px-6 py-5 rounded-2xl flex-row items-center justify-center space-x-3 transition-all will-change-variable`}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Feather
-                  name="upload-cloud"
-                  size={24}
-                  color={files.length ? "#fff" : "#94a3b8"}
-                />
-                <Text
-                  className={`${files.length ? "text-primary-foreground" : "text-muted-foreground"} font-bold text-lg`}
-                >
-                  {loading ? "Uploading..." : "Upload Now"}
-                </Text>
-              </>
-            )}
-          </Pressable>
+          <View className="mt-2 h-3 w-full overflow-hidden rounded-full border">
+            <View
+              className="h-full bg-blue-600"
+              style={{ width: `${progress * 100}%` }}
+            />
+          </View>
         </View>
+      )}
 
-        {/* Message Toast/Area */}
-        {message ? (
-          <View className="bg-popover p-4 rounded-xl border border-border shadow-sm">
-            <Text className="text-popover-foreground text-center font-medium">
-              {message}
+      {error !== "" && (
+        <View className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
+          <Text className="text-sm text-red-700">{error}</Text>
+        </View>
+      )}
+
+      <View className="mt-6 space-y-4">
+        {results.map((r, idx) => (
+          <View key={idx} className="rounded-xl border p-4">
+            <Text className="text-sm font-medium">
+              Uploaded ({r.resource_type}) ✅
+            </Text>
+
+            {r.secure_url && r.resource_type === "image" && (
+              <Image
+                source={{ uri: r.secure_url }}
+                className="mt-3 h-72 w-full rounded-xl"
+                resizeMode="cover"
+              />
+            )}
+
+            <Text className="mt-3 rounded bg-gray-50 p-3 text-xs">
+              {JSON.stringify(r, null, 2)}
             </Text>
           </View>
-        ) : null}
+        ))}
       </View>
     </ScrollView>
   );

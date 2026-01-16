@@ -87,6 +87,9 @@ function slugifyFilename(name: string = ""): string {
  */
 const signUploadForm = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
+
+    console.log("sign_upload_form:post end point hit");
+
     if (!API_SECRET || !CLOUD_NAME || !API_KEY) {
       throw new ApiError(
         500,
