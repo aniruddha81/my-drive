@@ -43,7 +43,7 @@ export default function Page() {
         {
           folder: "signed_upload_demo_form",
           files: fileMeta,
-        }
+        },
       );
 
       const uploads = signRes.data.data;
@@ -79,12 +79,16 @@ export default function Page() {
           },
         });
 
+        await axios.post("/api/v1/store_into_db", res.data);
+
         setResults((prev) => [...prev, res.data]);
       }
     } catch (e: any) {
       console.log("Upload error:", e);
       setError(
-        axios.isAxiosError(e) ? e.response?.data?.error || e.message : String(e)
+        axios.isAxiosError(e)
+          ? e.response?.data?.error || e.message
+          : String(e),
       );
     } finally {
       setUploading(false);

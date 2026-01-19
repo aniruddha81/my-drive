@@ -2,7 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import morgan from "morgan";
-import { CORS_ORIGIN } from "./Constants.js";
+import { CORS_ORIGIN } from "./Constants.ts";
 
 const app = express();
 
@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 
 // Import Routes
-import uploadRouter from "./routes/upload.route.js";
+import uploadRouter from "./routes/upload.route.ts";
 
 // API Routes
 app.use("/api/v1", uploadRouter);

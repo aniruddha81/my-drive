@@ -1,6 +1,9 @@
 import { Router } from "express";
-import { signUploadForm } from "../controllers/upload.controller.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
+import {
+  signUploadForm,
+  storeIntoDB,
+} from "../controllers/upload.controller.ts";
+import { ApiResponse } from "../utils/ApiResponse.ts";
 
 const uploadRouter = Router();
 
@@ -11,6 +14,7 @@ uploadRouter.get("/upload-files", (req, res) => {
 });
 
 uploadRouter.post("/sign_upload_form", signUploadForm);
+uploadRouter.post("/store_into_db", storeIntoDB);
 
 // uploadRouter.post("/upload-files", upload.array('files', 10), uploadController);
 

@@ -14,18 +14,23 @@ datasource db {
 }
 
 model File {
-  id           String   @id @default(cuid())
+  id           String @id @default(cuid())
   name         String
-  publicId     String   @unique
+  publicId     String @unique
   url          String
   size         Int
   format       String
   resourceType String
   width        Int?
   height       Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+
+  assetId     String @unique // Important for Cloudinary API calls
+  displayName String // Better display name
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([createdAt])
   @@index([resourceType])
+  @@index([assetId])
 }

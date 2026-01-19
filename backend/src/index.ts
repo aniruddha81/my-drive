@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { Server } from "http";
-import app from "./app.js";
-import { PORT } from "./Constants.js";
-import { connectDB, disconnectDB } from "./db/index.js";
+import app from "./app.ts";
+import { PORT } from "./Constants.ts";
+import { connectDB, disconnectDB } from "./db/index.ts";
 
 // Keep a reference to the server so shutdown handlers can close it.
 let server: Server | null = null;

@@ -90,12 +90,16 @@ export default function UploadScreen() {
           },
         });
 
+        await api.post("/api/v1/store_into_db", res.data);
+
         setResults((prev) => [...prev, res.data]);
       }
     } catch (e: any) {
       console.log("Upload error:", e);
       setError(
-        axios.isAxiosError(e) ? e.response?.data?.error || e.message : String(e)
+        axios.isAxiosError(e)
+          ? e.response?.data?.error || e.message
+          : String(e),
       );
     } finally {
       setUploading(false);
