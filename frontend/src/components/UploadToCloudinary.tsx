@@ -39,7 +39,7 @@ export default function Page() {
       const fileMeta = Array.from(files).map((f) => ({ filename: f.name }));
 
       const signRes = await axios.post<SignResponse>(
-        "api/v1/sign_upload_form",
+        "/api/v1/sign_upload_form",
         {
           folder: "signed_upload_demo_form",
           files: fileMeta,
